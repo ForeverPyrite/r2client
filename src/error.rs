@@ -10,6 +10,6 @@ pub enum R2Error {
     Xml(#[from] xmltree::ParseError),
     #[error("Missing environment varibles: {0}")]
     Env(String),
-    #[error("Other: {0}")]
-    Other(String),
+    #[error("Request failed during operation {0}: {1}\n{2}")]
+    FailedRequest(String, http::StatusCode, String),
 }

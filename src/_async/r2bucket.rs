@@ -1,14 +1,21 @@
 use crate::R2Client;
 use crate::R2Error;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct R2Bucket {
     bucket: String,
     pub client: R2Client,
 }
 
 impl R2Bucket {
-    pub fn new(bucket: String, client: R2Client) -> Self {
+    pub fn new(bucket: String) -> Self {
+        Self {
+            bucket,
+            client: R2Client::new(),
+        }
+    }
+
+    pub fn from_client(bucket: String, client: R2Client) -> Self {
         Self { bucket, client }
     }
 
@@ -35,7 +42,7 @@ impl R2Bucket {
 
     pub async fn download_file(&self, r2_file_key: &str, local_path: &str) -> Result<(), R2Error> {
         self.client
-            .download_file(&self.bucket, r2_file_key, local_path)
+            .download_file(&self.bucket, r2_file_key, local_path, None)
             .await
     }
 
@@ -53,19 +60,10 @@ impl R2Bucket {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::R2Client;
-    use std::env;
 
     fn get_test_bucket() -> R2Bucket {
         dotenv::dotenv().ok();
-        let access_key =
-            env::var("R2_ACCESS_KEY").unwrap_or_else(|_| "test_access_key".to_string());
-        let secret_key =
-            env::var("R2_SECRET_KEY").unwrap_or_else(|_| "test_secret_key".to_string());
-        let endpoint = env::var("R2_ENDPOINT")
-            .unwrap_or_else(|_| "https://example.r2.cloudflarestorage.com".to_string());
-        let client = R2Client::from_credentials(access_key, secret_key, endpoint);
-        R2Bucket::new("test-bucket".to_string(), client)
+        R2Bucket::new("test-bucket".to_string())
     }
 
     #[test]
