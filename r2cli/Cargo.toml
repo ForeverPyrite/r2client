@@ -1,0 +1,13 @@
+[package]
+name = "r2cli"
+version = "0.1.0"
+edition = "2024"
+authors = ["foreverpyrite <foreverpyrite+cratesio@gmail.com"]
+description = "CLI for Cloudflare R2's S3-compatible storage using r2client"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+dotenv = "0.15"
+r2client = { path = "../r2client", default-features = false, features = [
+  "sync",
+] }

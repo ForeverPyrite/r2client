@@ -1,0 +1,33 @@
+[package]
+name = "aws_sigv4"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+
+[dependencies]
+# For the very specific date-time format Amazon wants
+chrono = "0.4.42"
+# SHA256 Hashing
+sha2 = "0.10.9"
+# Representing binary data in valid strings
+hex = "0.4.3"
+# Used to derive the signing key and sign the string
+hmac = "0.12.1"
+# For the HeaderMap struct and Method enum
+http = "1.3.1"
+# The base URL encoding
+urlencoding = "2.1.3"
+
+# Logging (final result is traced with log::trace!)
+log = "0.4.28"
+
+[dev-dependencies]
+# To get env vars for test
+dotenv = "0.15.0"
+# For the client
+reqwest = { version = "0.12.23", features = ["blocking"] }
+# For the Uri, unfortunately (why wouldn't reqwest re-export that?)
+# Perhaps it's Url type works fine, but still, I would like to let
+# users have as much agency over their http client as possible.
+http = "1.3.1"
