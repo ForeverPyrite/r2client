@@ -1,5 +1,5 @@
 # r2client
-This is a Rust project ("cargo workspace" :nerd::point_up:) containing a few tools and utilities I created to
+This is a Rust project ("cargo workspace" :nerd_face::point_up:) containing a few tools and utilities I created to
 have an easier time interfacing with [Couldflare's R2 Bucket Storage](https://www.cloudflare.com/developer-platform/products/r2/).
 Yeah.
 Cool, right?
