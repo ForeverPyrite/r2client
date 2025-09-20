@@ -1,0 +1,3 @@
+[workspace]
+resolver = "3"
+members = ["r2client", "r2cli", "r2python", "aws_sigv4"]
