@@ -2,22 +2,35 @@
 name = "r2client"
 version = "0.2.0"
 edition = "2024"
+authors = ["ForeverPyrite <r2@foreverpyrite.com"]
 
 [lib]
 
 [dependencies]
+# Client to send the http requests
 reqwest = "0.12.19"
+# To parse the information about objects within a bucket
 xmltree = "0.11.0"
-thiserror = "2"
+# Validates and manages methods, headers, and urls
 http = "1.3.1"
+# Signs the S3 requests with SigV4
 aws_sigv4 = { path = "../aws_sigv4/" }
+
+# Logging
 log = "0.4.28"
+# Painless error creation (for me)
+thiserror = "2"
 
 [dev-dependencies]
+# Runtime for the async requests
 tokio = { version = "1", features = ["full", "macros", "rt-multi-thread"] }
+# Cause you ain't getting my env variables and I ain't setting them every time
 dotenv = "0.15"
 
 [features]
-async = []
 default = ["async"]
+# The asyncronous API
+async = []
+# The syncronous, blocking API
+# yeah surprise, still uses reqwest.
 sync = ["reqwest/blocking"]

@@ -371,6 +371,13 @@ mod tests {
             bucket,
             file_key
         );
+        // "Two copies for the same thing? That's stupid!" I agree.
+        // I want people to be able to use whatever HTTP Client they want, but reqwest doesn't like
+        // that idea.
+        // It dawns upon me that I can just accept a string, try to parse it to http::Uri, and just
+        // use it internally.
+        // damn.
+        // crazy.
         let endpoint: http::Uri = url.parse().unwrap();
 
         let headers = vec![("host".to_string(), endpoint.host().unwrap().to_owned())];

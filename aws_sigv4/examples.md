@@ -1,3 +1,10 @@
+oh hi
+I haven't done the unit tests yet.
+I thought it wouldn't work but then it just randomly worked after not working with no changes
+which was really weird
+I should probably still put the unit tests in there, cause they kinda just...fail...
+
+
 Example: GET Object
 The following example gets the first 10 bytes of an object (test.txt) from examplebucket. For more information about the API action, see GetObject.
 

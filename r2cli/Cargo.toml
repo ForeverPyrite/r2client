@@ -2,12 +2,19 @@
 name = "r2cli"
 version = "0.1.0"
 edition = "2024"
-authors = ["foreverpyrite <foreverpyrite+cratesio@gmail.com"]
+authors = ["foreverpyrite <r2client@foreverpyrite.com"]
 description = "CLI for Cloudflare R2's S3-compatible storage using r2client"
 
 [dependencies]
+# Command Line Argument Parsing :exploding_head:
 clap = { version = "4", features = ["derive"] }
+
+# That way this can be used for some basic troubleshooting
+# ~~not rn though, the error handling is non-existent~~
 dotenv = "0.15"
+
+# The R2Client for the R2 Command Line, crazy
+# Since I'm not doing anything asyncronus for now, it's easier (lazier) to just use the blocking client
 r2client = { path = "../r2client", default-features = false, features = [
   "sync",
 ] }

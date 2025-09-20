@@ -2,6 +2,7 @@
 name = "aws_sigv4"
 version = "0.1.0"
 edition = "2024"
+description = "Minimal-dependancy library to sign requests via AWS's SigV4."
 
 [lib]
 

@@ -28,8 +28,10 @@ r2cli list-folders
 ```
 
 ## Requirements
-- Rust
+- Rust (WOAH (I'm too lazy to build the binary and put it elsewhere))
 - Valid Cloudflare R2 credentials
 
 ## Todo
-- [ ] If you REALLY feel goofy, a TUI would be pretty sick
+- [ ] Allow multiple, parallel, file uploads under a specific key/folder
+- [ ] Just more stuff like the above, download all the objects in a key/folder, ect
+- [ ] If you REALLY feel goofy, a TUI would be pretty sick, however the r2client APIs would need extended quite a bit
