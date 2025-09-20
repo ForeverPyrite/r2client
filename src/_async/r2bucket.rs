@@ -1,4 +1,4 @@
-use crate::R2Client;
+use crate::_async::R2Client;
 use crate::R2Error;
 
 #[derive(Debug)]
@@ -55,28 +55,8 @@ impl R2Bucket {
     pub async fn list_folders(&self) -> Result<Vec<String>, R2Error> {
         self.client.list_folders(&self.bucket).await
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn get_test_bucket() -> R2Bucket {
-        dotenv::dotenv().ok();
-        R2Bucket::new("test-bucket".to_string())
+    pub async fn delete_file(&self, r2_file_key: &str) -> Result<(), R2Error> {
+        self.client.delete(&self.bucket, r2_file_key).await
     }
-
-    #[test]
-    fn test_bucket_construction() {
-        let bucket = get_test_bucket();
-        assert_eq!(bucket.bucket, "test-bucket");
-    }
-
-    // Example async test (requires a runtime, so ignored by default)
-    // #[tokio::test]
-    // async fn test_upload_file() {
-    //     let bucket = get_test_bucket();
-    //     let result = bucket.upload_file("Cargo.toml", "test-upload.toml").await;
-    //     assert!(result.is_ok());
-    // }
 }

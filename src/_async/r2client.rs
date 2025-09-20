@@ -1,14 +1,15 @@
 use crate::R2Error;
-use crate::aws_signing::Sigv4Client;
-use crate::mimetypes::Mime;
+use crate::mimetypes::get_mimetype_from_fp;
+use aws_sigv4::SigV4Credentials;
 use http::Method;
+use log::trace;
 use reqwest::header::HeaderMap;
 use std::collections::HashMap;
 use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct R2Client {
-    sigv4: Sigv4Client,
+    sigv4: SigV4Credentials,
     endpoint: String,
 }
 impl R2Client {
@@ -23,14 +24,14 @@ impl R2Client {
         let (access_key, secret_key, endpoint) = Self::get_env().unwrap();
 
         Self {
-            sigv4: Sigv4Client::new("s3", "auto", access_key, secret_key),
+            sigv4: SigV4Credentials::new("s3", "auto", access_key, secret_key),
             endpoint,
         }
     }
 
     pub fn from_credentials(access_key: String, secret_key: String, endpoint: String) -> Self {
         Self {
-            sigv4: Sigv4Client::new("s3", "auto", access_key, secret_key),
+            sigv4: SigV4Credentials::new("s3", "auto", access_key, secret_key),
             endpoint,
         }
     }
@@ -56,31 +57,6 @@ impl R2Client {
         }
 
         let (_, header_map) = self.sigv4.signature(method, uri, headers, payload);
-        // // I said fuck it but this is BS, I'm gonna try having signature return the HeaderMap
-        // directly.
-        // // Granted this impl had much better handling, fuck it we ball.
-        // let mut header_map = header::HeaderMap::new();
-        // for header in headers {
-        //     header_map.insert(
-        //         HeaderName::from_lowercase(header.0.to_lowercase().as_bytes())
-        //             .inspect_err(|e| {
-        //                 eprint!(
-        //                     "Sucks to suck: {e:?} from trying to get a header name out of {}",
-        //                     header.0.to_lowercase()
-        //                 )
-        //             })
-        //             .unwrap(),
-        //         HeaderValue::from_str(&header.1)
-        //             .inspect_err(|e| {
-        //                 eprint!(
-        //                     "Sucks to suck: {e:?} from trying to get a header value out of {} for header {}",
-        //                     header.1,
-        //                     header.0.to_lowercase(),
-        //                 )
-        //             })
-        //             .unwrap(),
-        //     );
-        // }
         Ok(header_map)
     }
 
@@ -93,16 +69,16 @@ impl R2Client {
     ) -> Result<(), R2Error> {
         // Payload (file data)
         let payload = std::fs::read(local_file_path)?;
-        println!(
+        trace!(
             "[upload_file] Payload hash for signing: {}",
-            crate::aws_signing::hash(&payload)
+            aws_sigv4::hash(&payload)
         );
 
         // Set HTTP Headers
         let content_type = if let Some(content_type) = content_type {
             Some(content_type)
         } else {
-            Some(Mime::get_mimetype_from_fp(local_file_path))
+            Some(get_mimetype_from_fp(local_file_path))
         };
         let headers = self.create_headers(
             Method::PUT,
@@ -112,7 +88,7 @@ impl R2Client {
             content_type,
             None,
         )?;
-        println!("[upload_file] Headers sent to request: {headers:#?}");
+        trace!("[upload_file] Headers sent to request: {headers:#?}");
         let file_url = self.build_url(bucket, Some(r2_file_key));
         let client = reqwest::Client::new();
         let resp = client
@@ -145,10 +121,10 @@ impl R2Client {
         // https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html#:~:text=For%20Amazon%20S3%2C%20include%20the%20literal%20string%20UNSIGNED%2DPAYLOAD%20when%20constructing%20a%20canonical%20request%2C%20and%20set%20the%20same%20value%20as%20the%20x%2Damz%2Dcontent%2Dsha256%20header%20value%20when%20sending%20the%20request.
         // I don't know if I should trust it though, I don't see public impls with this.
         let payload = "";
-        println!("[download_file] Payload for signing: (empty)");
+        trace!("[download_file] Payload for signing: (empty)");
         let headers =
             self.create_headers(Method::GET, bucket, Some(key), payload, None, extra_headers)?;
-        println!("[download_file] Headers sent to request: {headers:#?}");
+        trace!("[download_file] Headers sent to request: {headers:#?}");
         let file_url = self.build_url(bucket, Some(key));
         let client = reqwest::Client::new();
         let resp = client.get(&file_url).headers(headers).send().await?;
@@ -164,11 +140,37 @@ impl R2Client {
             ))
         }
     }
+    pub async fn delete(&self, bucket: &str, remote_key: &str) -> Result<(), R2Error> {
+        let payload = "";
+        trace!("[delete_file] Payload for signing: (empty)");
+        let headers = self.create_headers(
+            Method::DELETE,
+            bucket,
+            Some(remote_key),
+            payload,
+            None,
+            None,
+        )?;
+        trace!("[delete_file] Headers sent to request: {headers:#?}");
+        let file_url = self.build_url(bucket, Some(remote_key));
+        let client = reqwest::Client::new();
+        let resp = client.delete(&file_url).headers(headers).send().await?;
+        let status = resp.status();
+        if status.is_success() {
+            Ok(())
+        } else {
+            Err(R2Error::FailedRequest(
+                format!("deleting file \"{remote_key}\" from bucket \"{bucket}\""),
+                status,
+                resp.text().await?,
+            ))
+        }
+    }
     async fn get_bucket_listing(&self, bucket: &str) -> Result<String, R2Error> {
         let payload = "";
-        println!("[get_bucket_listing] Payload for signing: (empty)");
+        trace!("[get_bucket_listing] Payload for signing: (empty)");
         let headers = self.create_headers(Method::GET, bucket, None, payload, None, None)?;
-        println!("[get_bucket_listing] Headers sent to request: {headers:#?}");
+        trace!("[get_bucket_listing] Headers sent to request: {headers:#?}");
         let url = self.build_url(bucket, None);
         let client = reqwest::Client::new();
         let resp = client
@@ -223,10 +225,10 @@ impl R2Client {
             .filter(|e| e.name == "Contents")
         {
             let key_elem = content.get_child("Key").and_then(|k| k.get_text());
-            if let Some(file_key) = key_elem {
-                if let Some(idx) = file_key.find('/') {
-                    folders.insert(file_key[..idx].to_string());
-                }
+            if let Some(file_key) = key_elem
+                && let Some(idx) = file_key.find('/')
+            {
+                folders.insert(file_key[..idx].to_string());
             }
         }
         Ok(folders.into_iter().collect())
@@ -235,7 +237,7 @@ impl R2Client {
     fn build_url(&self, bucket: &str, key: Option<&str>) -> String {
         match key {
             Some(k) => {
-                let encoded_key = crate::aws_signing::url_encode(k);
+                let encoded_key = aws_sigv4::url_encode(k);
                 format!("{}/{}/{}", self.endpoint, bucket, encoded_key)
             }
             None => format!("{}/{}/", self.endpoint, bucket),

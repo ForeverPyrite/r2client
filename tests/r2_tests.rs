@@ -1,4 +1,3 @@
-use std::env;
 use std::fs;
 use std::io::Write;
 
@@ -63,7 +62,6 @@ mod sync_tests {
         // Cleanup
         fs::remove_file(local_upload_path).unwrap();
         fs::remove_file(local_download_path).unwrap();
-        // NOTE: The test file on R2 is not deleted as there is no delete API yet.
     }
 }
 
@@ -132,6 +130,8 @@ mod async_tests {
         // Cleanup
         fs::remove_file(local_upload_path).unwrap();
         fs::remove_file(local_download_path).unwrap();
-        // NOTE: The test file on R2 is not deleted as there is no delete API yet.
+
+        // 6. Delete file
+        bucket.delete_file(r2_file_key).await.unwrap();
     }
 }
