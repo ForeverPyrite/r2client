@@ -7,6 +7,19 @@ use reqwest::header::HeaderMap;
 use std::collections::HashMap;
 use std::str::FromStr;
 
+
+// I wonder if something like this would be better for error handling instead of a hardcoded
+// string?
+// Of course it'll only be for this codebase, but it would make the code more maintainable, right?
+// #[derive(Debug)]
+// enum R2Operation {
+//     Delete,
+//     Download,
+//     Upload,
+//     ListFiles,
+//     ListAll
+// }
+
 #[derive(Debug)]
 pub struct R2Client {
     sigv4: SigV4Credentials,
@@ -66,7 +79,7 @@ impl R2Client {
         local_file_path: &str,
         r2_file_key: &str,
         content_type: Option<&str>,
-    ) -> Result<(), R2Error> {
+    ) -> crate::Result {
         // Payload (file data)
         let payload = std::fs::read(local_file_path)?;
         trace!(

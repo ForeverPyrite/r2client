@@ -1,6 +1,8 @@
 mod error;
 mod mimetypes;
-pub use error::R2Error;
+// Should r2client::Result be r2client::R2Result just in case someone does a glob import or
+// something? Or should that be left to the user of the library to use the "as" keyword?
+pub use error::{R2Error, Result};
 
 mod _async;
 #[cfg(feature = "async")]

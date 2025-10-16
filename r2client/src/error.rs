@@ -13,3 +13,5 @@ pub enum R2Error {
     #[error("Request failed during operation {0}: {1}\n{2}")]
     FailedRequest(String, http::StatusCode, String),
 }
+
+pub type Result = std::result::Result<(), R2Error>;

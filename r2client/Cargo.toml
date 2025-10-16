@@ -2,7 +2,7 @@
 name = "r2client"
 version = "0.2.0"
 edition = "2024"
-authors = ["ForeverPyrite <r2@foreverpyrite.com"]
+authors = ["foreverpyrite <r2client@foreverpyrite.com"]
 
 [lib]
 
